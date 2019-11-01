@@ -50,5 +50,11 @@ public class IssueCash extends FlowLogic<SignedTransaction> {
         FungibleToken fungibleToken = new FungibleToken(amountToIssue, recipient, TransactionUtilitiesKt.getAttachmentIdForGenericParam(currencyType));
 
         return subFlow(new IssueTokens(ImmutableList.of(fungibleToken)));
+
+        // FlowSession session = initiateFlow(recipient);
+        // subFlow(new IssueTokensHandler(session));
+        // return subFlow(new IssueTokensFlow(
+        //         ImmutableList.of(fungibleToken),
+        //         ImmutableList.of(session) ));
     }
 }
