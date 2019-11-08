@@ -20,7 +20,6 @@ public class PrintStates extends FlowLogic<String> {
 
         StringBuffer output= new StringBuffer("\n\n");
         allStatesAndRefs.forEach(state -> {
-
             if (state.getState().getData() instanceof NonFungibleToken) {
                 // Because we queried for NonFungibleToken
                 NonFungibleToken nonFungibleTokenState = (NonFungibleToken) state.getState().getData();
@@ -30,14 +29,10 @@ public class PrintStates extends FlowLogic<String> {
 
                 if (realTokenType instanceof CouponTokenType) {
                     CouponTokenType c = (CouponTokenType) realTokenType;
-                    System.out.println("Item Id is " + c.getItemId());
-                    output.append("***** Coupon: " + c.getItemId() + "****\n");
-                }
-                else if (realTokenType.isRegularTokenType()) {
-                    output.append("***** Regular Non-Fungible Token ****\n");
+                    output.append("***** Coupon: " + c.getDiscount() + "% off ****\n");
                 }
             } else {
-                output.append("**** Boring Token ****\n");
+                output.append("**** State ****\n");
             }
 
             output.append(state.getState().getData().toString() + "\n\n");

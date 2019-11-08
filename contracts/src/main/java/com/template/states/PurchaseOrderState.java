@@ -38,4 +38,9 @@ public class PurchaseOrderState implements ContractState {
     public List<AbstractParty> getParticipants() {
         return ImmutableList.of(seller, buyer);
     }
+
+    @Override
+    public String toString() {
+        return "Purchase Order for item " + itemId + " from Seller " + seller.getName() + " to Buyer " + buyer.getName();
+    }
 }

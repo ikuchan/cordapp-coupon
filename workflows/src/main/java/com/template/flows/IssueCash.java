@@ -19,14 +19,13 @@ import net.corda.core.utilities.ProgressTracker;
 public class IssueCash extends FlowLogic<SignedTransaction> {
     private final ProgressTracker progressTracker = new ProgressTracker();
 
-    private final String currency;
+    private final String currency = "JPY";
     private final Long amount;
     private final Party recipient;
 
-    public IssueCash(Long amount, String currency, Party recipient) {
+    public IssueCash(Long amount, Party to) {
         this.amount = amount;
-        this.currency = currency;
-        this.recipient = recipient;
+        this.recipient = to;
     }
 
     @Override

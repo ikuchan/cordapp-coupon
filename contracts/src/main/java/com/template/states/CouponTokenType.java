@@ -20,9 +20,11 @@ public class CouponTokenType extends TokenType {
         return itemId;
     }
 
+    public int getDiscount() {  return discount; }
+
     @NotNull
     @Override
     public String toString() {
-        return super.toString() + discount +  "% off on item " + itemId;
+        return super.toString() + " " + discount +  "% off discount";
     }
 }
