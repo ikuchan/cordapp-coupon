@@ -8,36 +8,41 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType;
 import com.r3.corda.lib.tokens.contracts.utilities.TransactionUtilitiesKt;
 import com.r3.corda.lib.tokens.money.FiatCurrency;
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens;
+import com.template.flows.IssueCash;
 import com.template.states.CouponTokenType;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
+import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
+import net.corda.node.Corda;
 import net.corda.testing.node.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.annotation.Signed;
 import java.util.List;
 
-public class TokenTests {
-    private final MockNetwork network = new MockNetwork(new MockNetworkParameters(ImmutableList.of(
-            TestCordapp.findCordapp("com.template.flows")
-//            TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-//            TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-//            TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
-    )));
-    private final StartedMockNode bankNode = network.createPartyNode(null);
-    private final StartedMockNode aliceNode = network.createPartyNode(null);
-    private final StartedMockNode bobNode = network.createPartyNode(null);
+import static org.junit.Assert.assertEquals;
 
-//    private final TestIdentity bank = new TestIdentity(new CordaX500Name("Bank Japan", "", "GB"));
-//    private final TestIdentity alice = new TestIdentity(new CordaX500Name("Alice", "", "Japan"));
-//    private final TestIdentity bob = new TestIdentity(new CordaX500Name("Bob", "", "Japan"));
-//    private MockServices ledgerServices = new MockServices(new TestIdentity(new CordaX500Name("TestId", "", "GB")));
+public class TokenTests {
+    // Need to provide necessary CorDapp dependencies in the mock network here
+    private final MockNetwork network = new MockNetwork(new MockNetworkParameters(ImmutableList.of(
+            TestCordapp.findCordapp("com.template.flows"),
+            TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+            TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts")
+    )));
+
+    private final StartedMockNode bankNode = network.createPartyNode(new CordaX500Name("Bank", "London", "GB"));
+    private final StartedMockNode aliceNode = network.createPartyNode(new CordaX500Name("Alice", "London", "GB"));
+    private final StartedMockNode bobNode = network.createPartyNode(new CordaX500Name("Bob", "London", "GB"));
+    private final Party notary = network.getDefaultNotaryIdentity();
+    private final Party bank = bankNode.getInfo().getLegalIdentities().get(0);
+    private final Party alice = aliceNode.getInfo().getLegalIdentities().get(0);
 
     @Before
     public void setup() {
@@ -53,73 +58,22 @@ public class TokenTests {
     }
 
     @Test
-    public void dummyTest() throws Exception {
-        TokenType tokenType = FiatCurrency.Companion.getInstance("JPY");
-        Party bankParty = bankNode.getInfo().getLegalIdentities().get(0);
-        Party aliceParty = aliceNode.getInfo().getLegalIdentities().get(0);
-
-        IssuedTokenType issuedTokenType = new IssuedTokenType(bankParty, tokenType);
-
-        Amount<IssuedTokenType> amount = new Amount(1000, issuedTokenType);
-
-        FungibleToken money = new FungibleToken(
-                amount,
-                aliceParty,
-                TransactionUtilitiesKt.getAttachmentIdForGenericParam(tokenType));
-
-        CordaFuture<SignedTransaction> future = bankNode.startFlow(new IssueTokens(ImmutableList.of(money)));
-        network.runNetwork();
-
-
-//        SignedTransaction signedTransaction = future.get();
-//        System.out.println( aliceNode.getServices().getVaultService().queryBy(FungibleToken.class).getStates());
-//        System.out.println( bankNode.getServices().getVaultService().queryBy(FungibleToken.class).getStates());
-
-    }
-
-    @Test
     public void couponTest() throws Exception {
-        Party bankParty = bankNode.getInfo().getLegalIdentities().get(0);
-        Party aliceParty = aliceNode.getInfo().getLegalIdentities().get(0);
+        CordaFuture<SignedTransaction> future = bankNode.startFlow(new IssueCash((long) 2000, alice));
 
-        CouponTokenType tokenType = new CouponTokenType("item-30202", 15);
-        IssuedTokenType issuedTokenType = new IssuedTokenType(
-                bankNode.getInfo().getLegalIdentities().get(0),
-                tokenType);
+        network.runNetwork();;
 
-        System.out.println(tokenType.getTokenClass().getSimpleName());
-        if (tokenType.getTokenClass().equals(CouponTokenType.class)
-        /*tokenType.getTokenClass().getSimpleName().equals("CouponTokenType")*/) {
-            System.out.println("Hello Hello!");
-            CouponTokenType coupon = (CouponTokenType) tokenType;
-            System.out.println(coupon.getItemId());
-        }
+        SignedTransaction signedTransaction = future.get();
 
-        NonFungibleToken nonFungibleToken = new NonFungibleToken(
-                issuedTokenType,
-                aliceParty,
-                new UniqueIdentifier(),
-                TransactionUtilitiesKt.getAttachmentIdForGenericParam(tokenType));
+        List<StateAndRef<FungibleToken>> allStatesAndRefs = aliceNode.getServices().getVaultService().queryBy(FungibleToken.class).getStates();
 
-        CordaFuture<SignedTransaction> future = bankNode.startFlow(new IssueTokens(ImmutableList.of(nonFungibleToken)));
-        network.runNetwork();
+        assertEquals(1, allStatesAndRefs.size());
 
-        // SignedTransaction signedTransaction = future.get();
-        List<StateAndRef<ContractState>> allStatesAndRefs = bankNode.getServices().getVaultService().queryBy(ContractState.class).getStates();
-        // List<StateAndRef<ContractState>> allStatesAndRefs = getServiceHub().getVaultService().queryBy(ContractState.class).getStates();
+        StateAndRef<FungibleToken> stateAndRef =  allStatesAndRefs.get(0);
+        FungibleToken receivedToken = allStatesAndRefs.get(0).getState().getData();
 
-        // StringBuffer output= new StringBuffer("\n\n");
-        // allStatesAndRefs.forEach(state -> {
-        //
-        //     if (state.getState().getData() instanceof TokenType) {
-        //         // CouponTokenType c = (CouponTokenType) state.getState().getData();
-        //         // System.out.println("Item Id is " + c.getItemId());
-        //         output.append("Hello Hello**************");
-        //     }
-        //
-        //     output.append(state.getState().getData().getClass() + " -- " + state.getState().getData().toString() + "\n");
-        //     output.append(state.getState().toString() + "\n\n");
-        // });
-
+        assertEquals(bank, stateAndRef.getState().getData().getIssuer());
+        assertEquals(alice, stateAndRef.getState().getData().getHolder());
+        assertEquals(2000, receivedToken.getAmount().getQuantity());
     }
 }

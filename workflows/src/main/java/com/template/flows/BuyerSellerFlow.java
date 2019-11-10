@@ -156,7 +156,7 @@ public class BuyerSellerFlow {
 
                     stx.getTx().getOutputStates().stream().filter(it -> {
                          return (it instanceof FungibleToken &&
-                                (FungibleToken) ((FungibleToken) it).getHolder().getOwningKey() == myself.getOwningKey());
+                                ((FungibleToken) it).getHolder().equals(myself));
                     });
 
                     long amountPaid = 0;
@@ -164,7 +164,7 @@ public class BuyerSellerFlow {
                     for (int i = 0; i < outputStates.size(); i++) {
                         ContractState cs = outputStates.get(i);
                         if (cs instanceof FungibleToken &&
-                                ((FungibleToken) cs).getHolder().getOwningKey().equals(myself.getOwningKey())) {
+                                ((FungibleToken) cs).getHolder().equals(myself)) {
 
                             FungibleToken token = (FungibleToken) cs;
                             amountPaid += token.getAmount().getQuantity();
@@ -313,7 +313,7 @@ public class BuyerSellerFlow {
                             TokenType realTokenType = nonFungibleToken.getIssuedTokenType().getTokenType();
 
                             return (realTokenType instanceof CouponTokenType &&
-                                nonFungibleToken.getIssuer().getOwningKey().equals(issuer.getOwningKey()));
+                                nonFungibleToken.getIssuer().equals(issuer));
                         })
                         .findAny().orElse(null);
 
