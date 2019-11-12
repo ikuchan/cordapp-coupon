@@ -222,7 +222,6 @@ public class BuyerSellerFlow {
                 addNonFungibleTokensToRedeem(
                         transactionBuilder,
                         getServiceHub(),
-                        // nonFungibleToken.getIssuedTokenType().getTokenType(),
                         couponTokenType,
                         sellerParty
                 );

@@ -76,3 +76,4 @@ docs/virtualenv/
 
 # if you use the installQuasar task
 lib
+/.idea/codeStyles/codeStyleConfig.xml
