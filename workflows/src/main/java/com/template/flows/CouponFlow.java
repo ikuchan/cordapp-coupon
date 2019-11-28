@@ -101,7 +101,6 @@ public class CouponFlow {
         private final ProgressTracker progressTracker = new ProgressTracker();
 
         private final Party issuer;
-        // private final String
 
         public RedeemCoupon(Party issuer) {
             this.issuer = issuer;
