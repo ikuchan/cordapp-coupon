@@ -5,13 +5,12 @@ import com.google.common.collect.ImmutableList;
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken;
 import com.r3.corda.lib.tokens.contracts.types.TokenType;
 import com.template.states.CouponTokenType;
-import com.template.states.PurchaseOrderContract;
+import com.template.contracts.PurchaseOrderContract;
 import com.template.states.PurchaseOrderState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.flows.*;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
-import net.corda.core.node.NodeInfo;
 import net.corda.core.node.services.NetworkMapCache;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
@@ -19,8 +18,6 @@ import net.corda.core.utilities.ProgressTracker;
 
 import java.security.PublicKey;
 import java.util.List;
-
-import static com.r3.corda.lib.tokens.workflows.flows.redeem.RedeemFlowUtilitiesKt.addNonFungibleTokensToRedeem;
 
 
 public class PurchaseFlow {
@@ -105,7 +102,7 @@ public class PurchaseFlow {
 
             transactionBuilder
                     .addOutputState(outputState, PurchaseOrderContract.ID)
-                    .addCommand(new PurchaseOrderContract.Commands.Purchase(), requiredSigners);
+                    .addCommand(new PurchaseOrderContract.Commands.Issue(), requiredSigners);
 
             transactionBuilder.verify(getServiceHub());
 

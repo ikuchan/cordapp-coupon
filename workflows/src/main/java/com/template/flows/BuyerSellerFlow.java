@@ -7,10 +7,9 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken;
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken;
 import com.r3.corda.lib.tokens.contracts.types.TokenType;
 import com.r3.corda.lib.tokens.money.FiatCurrency;
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection;
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount;
 import com.template.states.CouponTokenType;
-import com.template.states.PurchaseOrderContract;
+import com.template.contracts.PurchaseOrderContract;
 import com.template.states.PurchaseOrderState;
 // import net.corda.confidential.IdentitySyncFlow;
 import net.corda.core.contracts.*;
@@ -22,7 +21,6 @@ import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.serialization.CordaSerializable;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
-import net.corda.core.transactions.WireTransaction;
 import net.corda.core.utilities.ProgressTracker;
 
 import java.time.Clock;
@@ -245,7 +243,7 @@ public class BuyerSellerFlow {
             transactionBuilder
                     .addOutputState(outputState, PurchaseOrderContract.ID)
                     .addCommand(
-                    new PurchaseOrderContract.Commands.Purchase(),
+                    new PurchaseOrderContract.Commands.Issue(),
                     ImmutableList.of(sellerParty.getOwningKey(), buyerParty.getOwningKey()));
 
             // Set TimeWindow for the transaction
