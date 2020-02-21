@@ -261,7 +261,7 @@ public class BuyerSellerFlow {
 
             PurchaseOrderState outputState = new PurchaseOrderState(sellerParty, buyerParty, saleRequest.getItemId());
             transactionBuilder
-                    // .addOutputState(outputState, PurchaseOrderContract.ID)
+                    .addOutputState(outputState, PurchaseOrderContract.ID)
                     .addCommand(
                     new PurchaseOrderContract.Commands.Issue(),
                     ImmutableList.of(sellerParty.getOwningKey(), buyerParty.getOwningKey()));
