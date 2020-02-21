@@ -138,6 +138,21 @@ public class BuyerSellerFlow {
                         TransactionState ts = loadTransactionState(matchedStates[0]);
                         NonFungibleToken nonFungibleToken = (NonFungibleToken) ts.getData();
                         CouponTokenType couponTokenType = (CouponTokenType) nonFungibleToken.getIssuedTokenType().getTokenType();
+
+                        PurchaseOrderState purchaseOrderState = (PurchaseOrderState) stx.getTx().getOutputStates().stream().filter(state -> {
+                            return state instanceof PurchaseOrderState;
+                        }).findAny().orElse(null);
+
+                        if (purchaseOrderState == null) {
+                            throw new FlowException("There should be exactly one PurchaseOrder state in output");
+                        } else if (!purchaseOrderState.getItemId().equals(couponTokenType.getItemId())) {
+                            throw new IllegalArgumentException(String.format(
+                                    "Coupon for item (%s) cannot be used for purchase of item (%s)",
+                                    couponTokenType.getItemId(),
+                                    purchaseOrderState.getItemId()));
+                        }
+
+
                         amountRequested -= Math.round(price * couponTokenType.getDiscount() / 100);
                     } else if (matchedStates.length > 1) {
                         throw new FlowException("There should be at most one coupon state in transaction");
@@ -179,9 +194,14 @@ public class BuyerSellerFlow {
             }
 
             // Respond to CollectSignatures request from buyer
-            SecureHash hash = subFlow(new SignTxFlow(session, SignTransactionFlow.tracker())).getId();
+            try{
+                SecureHash hash = subFlow(new SignTxFlow(session, SignTransactionFlow.tracker())).getId();
 
-            return subFlow(new ReceiveFinalityFlow(session, hash));
+                return subFlow(new ReceiveFinalityFlow(session, hash));
+            } catch (FlowException ex) {
+                throw ex;
+            }
+
         }
     }
 
@@ -195,7 +215,7 @@ public class BuyerSellerFlow {
 
         @Override
         @Suspendable
-        public SignedTransaction call() throws FlowException {
+        public SignedTransaction call() throws FlowException, IllegalStateException {
 
             // Receive sale  request from Seller
             SaleRequest saleRequest = session.receive(SaleRequest.class).unwrap(it -> {
@@ -241,7 +261,7 @@ public class BuyerSellerFlow {
 
             PurchaseOrderState outputState = new PurchaseOrderState(sellerParty, buyerParty, saleRequest.getItemId());
             transactionBuilder
-                    .addOutputState(outputState, PurchaseOrderContract.ID)
+                    // .addOutputState(outputState, PurchaseOrderContract.ID)
                     .addCommand(
                     new PurchaseOrderContract.Commands.Issue(),
                     ImmutableList.of(sellerParty.getOwningKey(), buyerParty.getOwningKey()));
