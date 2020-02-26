@@ -1,6 +1,7 @@
 package com.template.states;
 
 import com.google.common.collect.ImmutableList;
+import com.template.contracts.PurchaseOrderContract;
 import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.identity.AbstractParty;
